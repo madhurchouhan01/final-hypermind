@@ -1,0 +1,69 @@
+qna_parsing_task:
+  description: >
+    A lightweight agent responsible for handling factual, conceptual, and definitional queries. 
+    It specializes in delivering concise and accurate answers to straightforward questions such as 
+    "What is X?", "Explain Y", or "Describe Z"
+  expected_output: >
+    Answers to the use query related to Investment
+
+parse_query:
+  description: >
+    Your task is to analyze the natural language query: {query}.
+    
+    Identify and extract only the fields explicitly or implicitly referenced in the query that correspond to the following editable campaign parameters:
+      - "Audience Size"
+      - "US Adult Population"
+      - "Flight (months)"
+      - "Total Budget"
+    
+    Key Instructions:
+      - Only include fields in the output if the query indicates a change to them.
+      - Ensure all extracted values are numerically formatted (e.g., 3000000 not "3M", 2 not "two months").
+      - If any field is missing assign its value equal to zero int(0)
+      - Do not infer values not supported by the query—remain strictly evidence-based.
+      - Your output must be a valid JSON object directly convertible to a Python dictionary.
+
+  expected_output: >
+    Return a JSON-formatted dictionary containing parameters values as derived from the query.
+
+    Example Output:
+    {{
+      audience_size : 20030532
+      total_budget  : 50000000
+      flight        : 10
+      adult_pop     : 24050423
+    }}
+
+analyze_sensitivity:
+  description: >
+    Your responsibilities are:
+      - Analyze the user's query and determine **which single parameter** the user intends to tweak or experiment with and at what range.
+      - Return the **exact name** of the parameter (string) as listed below:
+          - audience_size : range(int)
+          - total_budget  : range(int)
+          - flight        : range(int)
+          - adult_pop     : range(int)
+      - Return the `data` object exactly as received—unchanged and valid JSON format.
+      - Do NOT infer or change any values.
+      - This structured output will be sent to a downstream calculation tool that performs the actual impact analysis.
+      - Finally, return the result from the tool as the final response.
+
+  expected_output: >
+    Return a well-formatted markdown report explaining the sensitivity outcome.
+
+    Example structure:
+
+    ## Sensitivity Analysis Report
+
+    **Parameter Analyzed:** "Flight (months)"
+
+    We analyzed the impact of varying "Flight (months)" from 3 to 9. Here’s what we observed:
+
+    - As the flight duration increased, **monthly budget per channel decreased**, leading to fewer impressions.
+    - **Gross Unique Reach** dropped from 9.1M at 3 months to 6.2M at 9 months.
+    - **Target Reach %** decreased steadily, from 65.3% to 42.8%.
+    - The decline was nearly linear, but sharpest between 3 to 5 months.
+
+    **Recommendation:** Keeping the flight between 3–5 months optimizes reach while preserving budget efficiency.
+
+    You must only return the final report. No JSON, no code blocks, no raw data.
